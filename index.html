@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>小宇宙烟花模拟器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+
+    <!-- 网站图标配置（不同场景的favicon） -->
+    <link rel="icon" type="image/png" href="./images/favicon.png"> <!-- 标准图标 -->
+    <!-- Windows磁贴配置 -->
+    <meta name="msapplication-TileColor" content="#000000">
+    <meta name="msapplication-TileImage" content="./images/favicon.png">
+
+    <link href="./fonts/css.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<!-- 隐藏的SVG图标库：预定义复用的图标，通过<use>引用 -->
+<!-- 样式：宽高为0、绝对定位、不可见，仅用于提供图标资源 -->
+<div style="height: 0; width: 0; position: absolute; visibility: hidden">
+    <svg xmlns="http://www.w3.org/2000/svg">
+        <!-- 播放图标：用于暂停/播放切换 -->
+        <symbol id="icon-play" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"></path>
+        </symbol>
+        <!-- 暂停图标：用于暂停/播放切换 -->
+        <symbol id="icon-pause" viewBox="0 0 24 24">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path>
+        </symbol>
+        <!-- 关闭图标：用于关闭设置菜单 -->
+        <symbol id="icon-close" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+        </symbol>
+        <!-- 设置图标：用于打开设置菜单 -->
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+        </symbol>
+        <!-- 声音开启图标：用于切换音效开关 -->
+        <symbol id="icon-sound-on" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path>
+        </symbol>
+        <!-- 声音关闭图标：用于切换音效开关 -->
+        <symbol id="icon-sound-off" viewBox="0 0 24 24">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"></path>
+        </symbol>
+    </svg>
+</div>
+
+<!-- 页面主容器：包含所有可视内容 -->
+<div class="container">
+    <!-- 舞台容器：烟花渲染的核心区域 -->
+    <div class="stage-container" style="width: 1088px; height: 948px;">
+        <!-- Canvas容器：背景样式配置 -->
+        <div class="canvas-container"
+             style="background-size: 100%; background-color: rgb(19, 13, 13);">
+            <!-- 轨迹Canvas：用于绘制烟花轨迹/残留火花（长曝光效果） -->
+            <canvas id="trails-canvas" width="1360" height="1185"
+                    style="touch-action: none; width: 1088px; height: 948px;"></canvas>
+            <!-- 主Canvas：用于绘制烟花爆炸、粒子等核心效果 -->
+            <!-- touch-action: none：禁用默认触摸行为（如缩放、滚动），避免影响交互 -->
+            <canvas id="main-canvas" width="1360" height="1185"
+                    style="touch-action: none; width: 1088px; height: 948px;"></canvas>
+        </div>
+
+        <!-- 控制按钮区域：暂停、音效、设置 -->
+        <div class="controls">
+            <!-- 暂停按钮：切换烟花播放/暂停状态 -->
+            <div class="btn pause-btn">
+                <svg fill="white" width="24" height="24">
+                    <use href="#icon-play" xlink:href="#icon-play"></use>
+                </svg>
+            </div>
+            <!-- 音效按钮：切换音效开启/关闭 -->
+            <div class="btn sound-btn">
+                <svg fill="white" width="24" height="24">
+                    <use href="#icon-sound-off" xlink:href="#icon-sound-off"></use>
+                </svg>
+            </div>
+            <!-- 设置按钮：打开设置菜单 -->
+            <div class="btn settings-btn">
+                <svg fill="white" width="24" height="24">
+                    <use href="#icon-settings" xlink:href="#icon-settings"></use>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 设置菜单：默认隐藏（hide类），点击设置按钮后显示 -->
+        <div class="menu hide">
+            <div class="menu__inner-wrap" style="opacity: 1;">
+                <!-- 关闭菜单按钮：点击隐藏设置菜单 -->
+                <div class="btn btn--bright close-menu-btn">
+                    <svg fill="white" width="24" height="24">
+                        <use href="#icon-close" xlink:href="#icon-close"></use>
+                    </svg>
+                </div>
+                <!-- 菜单标题 -->
+                <div class="menu__header">设置</div>
+                <!-- 菜单子标题 -->
+                <div class="menu__subheader">若想了解更多信息 请点击任意标签</div>
+
+                <!-- 设置表单：包含所有烟花参数配置项 -->
+                <form>
+                    <!-- 烟花类型选择 -->
+                    <div class="form-option form-option--select">
+                        <label class="shell-type-label"> 烟花类型 </label>
+                        <select class="shell-type">
+                            <option value="Random">随机</option>
+                            <option value="Crackle">噼啪响</option>
+                            <option value="Crossette">十字星</option>
+                            <option value="Crysanthemum">菊花形</option>
+                            <option value="Falling Leaves">落叶</option>
+                            <option value="Floral">繁花</option>
+                            <option value="Ghost">幽灵</option>
+                            <option value="Horse Tail">马尾</option>
+                            <option value="Palm">棕榈</option>
+                            <option value="Ring">环形</option>
+                            <option value="Strobe">频闪</option>
+                            <option value="Willow">垂柳</option>
+                        </select>
+                    </div>
+                    <!-- 烟花大小选择（英寸） -->
+                    <div class="form-option form-option--select">
+                        <label class="shell-size-label"> 烟花大小 </label>
+                        <select class="shell-size">
+                            <option value="0">3"</option>
+                            <option value="1">4"</option>
+                            <option value="2">6"</option>
+                            <option value="3">8"</option>
+                            <option value="4">12"</option>
+                            <option value="5">16"</option>
+                        </select>
+                    </div>
+                    <!-- 画质选择：影响粒子数量、渲染精度 -->
+                    <div class="form-option form-option--select">
+                        <label class="quality-ui-label"> 画质 </label>
+                        <select class="quality-ui">
+                            <option value="1">低</option>
+                            <option value="2">正常</option>
+                            <option value="3">高</option>
+                        </select>
+                    </div>
+                    <!-- 天空照亮效果：烟花爆炸时的背景亮度 -->
+                    <div class="form-option form-option--select">
+                        <label class="sky-lighting-label"> 照亮天空 </label>
+                        <select class="sky-lighting">
+                            <option value="0">不</option>
+                            <option value="1">暗</option>
+                            <option value="2">正常</option>
+                        </select>
+                    </div>
+                    <!-- 缩放比例：调整烟花渲染区域的缩放 -->
+                    <div class="form-option form-option--select">
+                        <label class="scaleFactor-label"> 缩放 </label>
+                        <select class="scaleFactor">
+                            <option value="0.50">50%</option>
+                            <option value="0.62">62%</option>
+                            <option value="0.75">75%</option>
+                            <option value="0.90">90%</option>
+                            <option value="1.00">100%</option>
+                            <option value="1.50">150%</option>
+                            <option value="2.00">200%</option>
+                        </select>
+                    </div>
+                    <!-- 文字烟花开关：是否启用文字形状的烟花 -->
+                    <div class="form-option form-option--checkbox">
+                        <label class="word-shell-label"> 文字烟花 </label>
+                        <input class="word-shell" type="checkbox">
+                    </div>
+                    <!-- 自动放烟花开关：是否自动发射烟花，无需手动点击 -->
+                    <div class="form-option form-option--checkbox">
+                        <label class="auto-launch-label"> 自动放烟花 </label>
+                        <input class="auto-launch" type="checkbox">
+                    </div>
+                    <!-- 终场模式：同时发射更多烟花，营造密集效果 -->
+                    <div class="form-option form-option--checkbox form-option--finale-mode" style="opacity: 1;">
+                        <label class="finale-mode-label"> 同时放更多的烟花 </label>
+                        <input class="finale-mode" type="checkbox">
+                    </div>
+                    <!-- 隐藏控制按钮：是否隐藏底部的暂停/音效/设置按钮 -->
+                    <div class="form-option form-option--checkbox">
+                        <label class="hide-controls-label"> 隐藏控制按钮 </label>
+                        <input class="hide-controls" type="checkbox">
+                    </div>
+                    <!-- 全屏开关：是否进入全屏模式 -->
+                    <div class="form-option form-option--checkbox form-option--fullscreen">
+                        <label class="fullscreen-label"> 全屏 </label>
+                        <input class="fullscreen" type="checkbox">
+                    </div>
+                    <!-- 长曝光效果：是否保留烟花的火花轨迹，不清除画布 -->
+                    <div class="form-option form-option--checkbox">
+                        <label class="long-exposure-label"> 保留烟花的火花 </label>
+                        <input class="long-exposure" type="checkbox">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 帮助弹窗：用于显示各设置项的说明信息 -->
+    <div class="help-modal">
+        <!-- 遮罩层：点击可关闭弹窗，半透明背景 -->
+        <div class="help-modal__overlay"></div>
+        <!-- 弹窗主体 -->
+        <div class="help-modal__dialog">
+            <div class="help-modal__header"></div> <!-- 弹窗标题（动态填充） -->
+            <div class="help-modal__body"></div>   <!-- 弹窗内容（动态填充） -->
+            <button type="button" class="help-modal__close-btn">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 引入脚本文件（按依赖顺序加载） -->
+<script src="./js/fscreen.js"></script>    <!-- 全屏API兼容封装 -->
+<script src="./js/Stage.js"></script>      <!-- Canvas舞台管理 -->
+<script src="./js/MyMath.js"></script>     <!-- 数学工具类 -->
+<script src="./js/script.js"></script>     <!-- 核心业务逻辑（烟花渲染、交互） -->
+
+</body>
+</html>
